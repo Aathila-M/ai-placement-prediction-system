@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard | Placement Prediction</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    background: linear-gradient(120deg, #020617, #020617);
+    color: white;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h1 {
+    color: #38bdf8;
+}
+
+.logout {
+    color: #f87171;
+    text-decoration: none;
+}
+
+.card {
+    background: #0f172a;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 20px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.4);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+input {
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    background: #020617;
+    color: white;
+}
+
+button {
+    margin-top: 15px;
+    padding: 12px;
+    width: 100%;
+    border-radius: 8px;
+    border: none;
+    background: #22c55e;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.result {
+    margin-top: 15px;
+    font-size: 18px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>🎓 AI Placement Prediction</h1>
+    <div>
+        Role: <b>{{ role | upper }}</b> |
+        <a class="logout" href="/logout">Logout</a>
+    </div>
+</div>
+
+<div class="card">
+    <h2>Student Profile</h2>
+    <div class="grid">
+        <input id="cgpa" placeholder="CGPA">
+        <input id="internships" placeholder="Internships">
+        <input id="projects" placeholder="Projects">
+        <input id="certifications" placeholder="Certifications">
+        <input id="communication_skills" placeholder="Communication (1–10)">
+        <input id="backlogs" placeholder="Backlogs">
+    </div>
+
+    <button onclick="predict()">Predict Placement</button>
+    <div class="result" id="result"></div>
+</div>
+
+{% if role == "admin" %}
+<div class="card">
+    <h2>📊 Model Insights</h2>
+    <canvas id="importanceChart"></canvas>
+    <br>
+    <canvas id="trendChart"></canvas>
+</div>
+{% endif %}
+
+<script>
+function predict() {
+    fetch("/predict", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            cgpa: parseFloat(cgpa.value),
+            internships: parseInt(internships.value),
+            projects: parseInt(projects.value),
+            certifications: parseInt(certifications.value),
+            communication_skills: parseInt(communication_skills.value),
+            backlogs: parseInt(backlogs.value)
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        result.innerHTML = `Result: <b>${data.result}</b> | Probability: <b>${data.probability}%</b>`;
+        location.reload();
+    });
+}
+
+{% if role == "admin" %}
+const features = {{ features | safe }};
+const importance = {{ importance | safe }};
+const probabilities = {{ probabilities | safe }};
+
+new Chart(document.getElementById("importanceChart"), {
+    type: "bar",
+    data: {
+        labels: features,
+        datasets: [{
+            label: "Feature Importance",
+            data: importance,
+            backgroundColor: "#22c55e"
+        }]
+    }
+});
+
+new Chart(document.getElementById("trendChart"), {
+    type: "line",
+    data: {
+        labels: probabilities.map((_, i) => i + 1),
+        datasets: [{
+            label: "Placement Probability (%)",
+            data: probabilities,
+            borderColor: "#38bdf8",
+            fill: false
+        }]
+    }
+});
+{% endif %}
+</script>
+
+</body>
+</html>
