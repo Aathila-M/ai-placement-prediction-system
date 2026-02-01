@@ -1,75 +1,26 @@
 import pandas as pd
-import joblib
-import os
-
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+import pickle
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report
 
-# =========================
-# CREATE MODELS FOLDER
-# =========================
-os.makedirs("models", exist_ok=True)
+data = {
+    "cgpa": [6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0],
+    "internships": [0, 1, 1, 2, 2, 3, 3],
+    "projects": [1, 2, 2, 3, 3, 4, 4],
+    "certifications": [0, 1, 1, 2, 2, 3, 3],
+    "communication": [4, 5, 6, 7, 8, 9, 9],
+    "backlogs": [3, 2, 1, 1, 0, 0, 0],
+    "placed": [0, 0, 1, 1, 1, 1, 1]
+}
 
-# =========================
-# LOAD DATASET
-# =========================
-df = pd.read_csv("dataset.csv")
-
-# =========================
-# FEATURES & LABEL
-# =========================
+df = pd.DataFrame(data)
 X = df.drop("placed", axis=1)
-y = df["placed"]   # 1 = Placed, 0 = Not Placed
+y = df["placed"]
 
-# =========================
-# FEATURE SCALING
-# =========================
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X, y)
 
-# =========================
-# TRAIN–TEST SPLIT (WITH STRATIFY)
-# =========================
-X_train, X_test, y_train, y_test = train_test_split(
-    X_scaled,
-    y,
-    test_size=0.2,
-    stratify=y,          # ✅ IMPORTANT (balanced classes)
-    random_state=42
-)
+with open("placement_model.pkl", "wb") as f:
+    pickle.dump(model, f)
 
-# =========================
-# MODEL (HIGH ACCURACY)
-# =========================
-model = RandomForestClassifier(
-    n_estimators=400,
-    max_depth=12,
-    min_samples_split=4,
-    class_weight="balanced",
-    random_state=42
-)
-
-# =========================
-# TRAIN MODEL
-# =========================
-model.fit(X_train, y_train)
-
-# =========================
-# EVALUATION
-# =========================
-y_pred = model.predict(X_test)
-
-accuracy = accuracy_score(y_test, y_pred)
-print("✅ Accuracy:", round(accuracy, 4))
-print("\n📊 Classification Report:\n")
-print(classification_report(y_test, y_pred))
-
-# =========================
-# SAVE MODEL & SCALER
-# =========================
-joblib.dump(model, "models/placement_model.pkl")
-joblib.dump(scaler, "models/scaler.pkl")
-
-print("\n✅ Placement model & scaler saved successfully")
+print("✅ placement_model.pkl created successfully")
+# To run this script, execute: python train_model.py
