@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual env
+venv/
+.env/
+
+# Model files (large)
+*.pkl
+
+# EXE build files
+build/
+dist/
+*.exe
+
+# OS / OneDrive
+Thumbs.db
+.DS_Store
+
+# VS Code
+.vscode/
