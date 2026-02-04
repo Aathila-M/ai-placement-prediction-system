@@ -2,21 +2,18 @@
 __pycache__/
 *.pyc
 
-# Virtual env
+# Virtual environments
 venv/
 .env/
 
-# Model files (large)
-*.pkl
-
-# EXE build files
+# PyInstaller
 build/
 dist/
-*.exe
-
-# OS / OneDrive
-Thumbs.db
-.DS_Store
+*.spec
 
 # VS Code
 .vscode/
+
+# OS
+.DS_Store
+Thumbs.db
