@@ -6,12 +6,24 @@ import os
 app = Flask(__name__)
 app.secret_key = "placement_secret_key"
 
-# ---------------- Load Model ----------------
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "placement_model.pkl")
-if not os.path.exists(MODEL_PATH):
-    raise FileNotFoundError("Run train_model.py first to create placement_model.pkl")
+# ---------------- Load Model (Render-safe paths) ----------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-model = pickle.load(open(MODEL_PATH, "rb"))
+MODEL_PATH = os.path.join(BASE_DIR, "models", "placement_model.pkl")
+SCALER_PATH = os.path.join(BASE_DIR, "models", "scaler.pkl")
+
+if not os.path.exists(MODEL_PATH):
+    raise FileNotFoundError(f"Model not found at {MODEL_PATH}")
+
+if not os.path.exists(SCALER_PATH):
+    raise FileNotFoundError(f"Scaler not found at {SCALER_PATH}")
+
+with open(MODEL_PATH, "rb") as f:
+    model = pickle.load(f)
+
+with open(SCALER_PATH, "rb") as f:
+    scaler = pickle.load(f)
+
 MODEL_ACCURACY = 92.5  # demo accuracy
 
 # ---------------- Login ----------------
@@ -43,8 +55,10 @@ def dashboard():
         X = np.array([[cgpa, internships, projects,
                        certifications, communication, backlogs]])
 
-        result = model.predict(X)[0]
-        prob = model.predict_proba(X)[0][1]
+        X_scaled = scaler.transform(X)
+
+        result = model.predict(X_scaled)[0]
+        prob = model.predict_proba(X_scaled)[0][1]
 
         prediction = "PLACED ✅" if result == 1 else "NOT PLACED ❌"
         probability = round(prob * 100, 2)
@@ -63,5 +77,7 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
+# ---------------- Render Required Entry ----------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
